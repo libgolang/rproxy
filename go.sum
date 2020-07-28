@@ -1,0 +1,4 @@
+github.com/libgolang/log v1.0.17 h1:IkpFXSyr+P7w2zq4Y5TBmRs/ZmdqolIhaI6c3Vzwbig=
+github.com/libgolang/log v1.0.17/go.mod h1:soZRiwFDEyzDSFFmXoYOOrTJTHjZT4pLkyapv72BBq4=
+github.com/libgolang/props v1.2.363 h1:3fs0Bnrfat4Y/6dVgmI8d7ukL1V+tTiq/bKJ+V2+KRM=
+github.com/libgolang/props v1.2.363/go.mod h1:UXtVdzwMxGr7EgF2OXEWJtrTWzRWjPfnHfV1CP1Y8bQ=
