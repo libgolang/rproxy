@@ -6,3 +6,7 @@ build:
 
 install:
 	go install
+
+test:
+	go test
+	make -C lib test
