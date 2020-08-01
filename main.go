@@ -1,15 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 
-	"github.com/libgolang/log"
+	"github.com/BurntSushi/toml"
+	"github.com/libgolang/log/v2"
 	"github.com/libgolang/props"
 )
 
@@ -21,38 +22,47 @@ func main() {
 
 	cfg, err := readConfig(configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("%s", err)
 	}
 
-	http.HandleFunc("/", handler(cfg))
-	listenTo := fmt.Sprintf("%s:%d", cfg.Ip, cfg.Port)
+	http.DefaultTransport.(*http.Transport).MaxIdleConns = *cfg.MaxIdleConns
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = *cfg.MaxIdleConnsPerHost
+
+	http.Handle("/", newHandler(cfg))
+	listenTo := fmt.Sprintf("%s:%d", *cfg.Ip, *cfg.Port)
 	log.Infof("Starting server %s", listenTo)
 	err = http.ListenAndServe(listenTo, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("%s", err)
 	}
 }
 
-func handler(cfg *config) func(http.ResponseWriter, *http.Request) {
-	m := make(map[string]*httputil.ReverseProxy)
+type handler struct {
+	m map[string]*backend
+}
+
+func newHandler(cfg *config) *handler {
+	m := make(map[string]*backend)
 	for _, p := range cfg.Proxies {
 		log.Info("Loading %s -> %s Proxy", p.DomainName, p.Remote)
-		remote, err := url.Parse(p.Remote)
-		if err != nil {
-			log.Fatal(err)
-		}
-		m[p.DomainName] = newReverseProxy(remote)
+		m[p.DomainName] = newBackend(p.Remote)
 	}
+	return &handler{m}
+}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		if proxy, ok := m[r.Host]; ok {
-			log.Info(r.URL)
-			proxy.ServeHTTP(w, r)
-		} else {
-			log.Warnf("Hostname %s not found", r.Host)
-			w.WriteHeader(404)
-			w.Write([]byte("Error 404 (Not Found)"))
+func (o *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	hostName := hostNameFromHostPort(r.Host)
+	if proxy, ok := o.m[hostName]; ok {
+		backend := proxy.Balance()
+		backend.ServeHTTP(w, r)
+	} else {
+		log.Warnf("Hostname %s not found", hostName)
+		for k, v := range o.m {
+			log.Info("%s -> %v", k, v)
 		}
+
+		w.WriteHeader(404)
+		w.Write([]byte("Error 404 (Not Found)"))
 	}
 }
 
@@ -62,10 +72,55 @@ func readConfig(file string) (*config, error) {
 		return nil, fmt.Errorf("Unable to read file %s: %s", file, err)
 	}
 	cfg := &config{}
-	if err := json.Unmarshal(b, cfg); err != nil {
-		return nil, fmt.Errorf("Unable to parse JSON for file %s: %s", file, err)
+	if err := toml.Unmarshal(b, cfg); err != nil {
+		return nil, fmt.Errorf("Error reading config file %s: %s", file, err)
+	}
+
+	if cfg.Ip == nil {
+		*cfg.Ip = "0.0.0.0"
+	}
+	if cfg.MaxIdleConns == nil {
+		*cfg.MaxIdleConns = 10000
+	}
+	if cfg.MaxIdleConnsPerHost == nil {
+		*cfg.MaxIdleConnsPerHost = 10000
+	}
+	if cfg.Port == nil {
+		*cfg.Port = 8080
 	}
 	return cfg, nil
+}
+
+type backend struct {
+	last    int
+	proxies []*httputil.ReverseProxy
+}
+
+func newBackend(urls []string) *backend {
+	proxies := make([]*httputil.ReverseProxy, 0, 0)
+	for _, u := range urls {
+		remote, err := url.Parse(u)
+		if err != nil {
+			log.Fatal("%s", err)
+		}
+		proxies = append(proxies, newReverseProxy(remote))
+	}
+
+	b := &backend{
+		last:    len(proxies),
+		proxies: proxies,
+	}
+	return b
+}
+
+func (o *backend) Balance() *httputil.ReverseProxy {
+	if o.last > 0 {
+		i := rand.Intn(o.last)
+		log.Info("rand: %d", i)
+		return o.proxies[i]
+	} else {
+		return o.proxies[0]
+	}
 }
 
 func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
@@ -88,6 +143,7 @@ func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
 	}
 	return &httputil.ReverseProxy{Director: director}
 }
+
 func singleJoiningSlash(a, b string) string {
 	aslash := strings.HasSuffix(a, "/")
 	bslash := strings.HasPrefix(b, "/")
@@ -100,13 +156,20 @@ func singleJoiningSlash(a, b string) string {
 	return a + b
 }
 
+func hostNameFromHostPort(hostport string) string {
+	parts := strings.Split(hostport, ":")
+	return parts[0]
+}
+
 type config struct {
-	Ip      string        `json:"ip"`
-	Port    int           `json:"port"`
-	Proxies []configProxy `json:"proxies"`
+	Ip                  *string       `toml:"ip"`
+	Port                *int          `toml:"port"`
+	MaxIdleConns        *int          `toml:"maxIdleConns"`        //10000
+	MaxIdleConnsPerHost *int          `toml:"maxIdleConnsPerHost"` // 10000
+	Proxies             []configProxy `toml:"proxy"`
 }
 
 type configProxy struct {
-	DomainName string `json:"domainName"` // example.com
-	Remote     string `json:"remote"`     // example.com
+	DomainName string   `toml:"domainName"` // example.com
+	Remote     []string `toml:"remote"`     // example.com
 }

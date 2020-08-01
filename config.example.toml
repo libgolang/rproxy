@@ -1,0 +1,33 @@
+#
+# The `ip` and `port` to attach to and listen for requests
+#
+ip = "0.0.0.0"
+port = 8888
+
+#
+# Limits to idle connections and connections per host.  When
+# set to zero the number of connections is unlimited.
+# See: https://golang.org/pkg/net/http/
+#
+maxIdleConns = 20000
+maxIdleConnsPerHost = 20000
+
+#
+# The `[[proxy]]` sections define reverse proxies.
+# The `domainName` field is a string to match the host
+# part of the request URL.
+# The `remote` field is list of remote URLs to forward
+# requests to.
+#
+
+[[proxy]]
+domainName = "localhost"
+remote = [
+	"http://localhost:8080",
+	"http://localhost:8081",
+	"http://localhost:8082",
+	]
+
+[[proxy]]
+domainName = "localhost2"
+remote = ["http://localhost2:8080"]
