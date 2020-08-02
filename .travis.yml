@@ -1,4 +1,3 @@
-sudo: required
 language: go
 go:
 - 1.14.2
@@ -13,9 +12,25 @@ jobs:
     script: make build
   - stage: test
     script: make test
-  - stage: deploy
-    script: make deploy
+  - stage: dist
+    script: make dist
     if: branch = master
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "W3ftyDyM8QxwLswdtg0EQYQ7CcBbn4rsLsD+txOQTrlvy11jtM0UJzoLedpvlF9Nbrdke23gjsjhTJzOPS1DYn5tarkZOSMKzaDOBEFF0OxiMvPm2MekqxRKVhqG1EN28pwZzk0Dt4chj1Q3nU3Tsewg4WEjorqlNFdoXL7ir6c+SLxK3RN1PTs+APDjnyTErCMuwRcvbnKq3vSQKaRezfQ35hDBbSKsnZnpxtcXw4bCIUv7jRH7ofp2fCrY3wZkZXfo5mE+xEz7z60nJr73sH8hes/Kc569gWIURDfvDXNhdVAbKaT/UK02vI06ZDaACYBZDmBFuqiQxa3XF1p+Nv++vhqwvu8lStS7xW74oaZEGEG7ULpOrGWAWX1dIuMBahOds5cLaqcZmJNcxGXPOa2k0W89FnkSFnaV1Tui3ky9IIETGd375/w9AePNMhoB65m0oL+DMPtyO7J6GCdQRWVYFzkmXFqzp0joamg1t+BSY2BPePTnHmKNTY9GsYAwP4fR+BwElF2Bys+kzj5l9QCxa0YfYTKXFKM13Lq8ZJwzAOx8FuWRApOwZTQSCU9TBBK9RT2CgwR/tpT/uvJhrYN5LV///Wgx4GOVD8m6Y2rg614/l23ywrnJ71kmk0tlnoSVrsR8duRKQZiV2bF6YzKtCZ2Tw2IZPlJxS4okayw="
+  tag_name: $VERSION.$TRAVIS_BUILD_NUMBER
+  file:
+    - rproxy-linux-amd64
+    - rproxy-windows-amd64.exe
+    - rproxy-darwin-amd64
+  skip_cleanup: true
+  on:
+    branch: master
+
 env:
+  
   global:
+    VERSION: 0.0
     secure: HmxN7/2crDYv6jqoTd3BmZS3/DmljTMqKnECLK0trL+gOOH/QmAOUkLaipSvUYcvUNcDIDRfiSBMrDJtfT5nxGfRqmTlpssTcQ5nt5Mm4VhKuQAegDaiEZxB+0ug5AZ0FrERhewJVo6E3N7VOUBEfY99xn+YRQKOMWZvMrvYQ5stNeBnGoR6Nd7/rGeqwSXJag/EWqfxfsRTVijcz8UAK9Ld1hTPdXs3hmPkkT9vXZwXNajUJB7uny29Ts90uYiFAmvG2xl4duMBOt1O2hBKxj8wnM/S1KtxMDJcXdgIzkO9AL+6iX8SGX0hY0YseAs7aCg1IaN+sCsHuvHpDwQTN4QWDfy0Kz7eZB6FFl3CSm6cmo9mlCf1thxARmng28sw0he04sz53GsZRSCj3kBMHkIHJCZG7ksLgjfCGvA2LnhqWvalmHsnYdqcvxy9X+ACtISFyr/ATtz4uR5maD1fyORv1Znd3BNn3t14BXB/KmS2NVYCCP6ULyQDRq3Fobs7ShBlheQcbjJPbeEL/9K9bNatgmhr7dUf593I0pmKj+3d1RfzlgmtiObNSuzwlrCC99GBhaptdmdSQsvwE41fnXE0SvxuggcNF2L0pdq1qo5mq3sVUStCIs7L+FMf+lGVF0/vx4WKaHHa4IESsrvWh+ygYYY3MepA8pr0x7q4rx4=
