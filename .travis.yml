@@ -22,8 +22,8 @@ deploy:
     - rproxy-darwin-amd64
   skip_cleanup: true
   tag_name: "1.0.$TRAVIS_BUILD_NUMBER"
-  on:
-    branch: master
+#  on:
+#    branch: master
 env:
   global:
     secure: HmxN7/2crDYv6jqoTd3BmZS3/DmljTMqKnECLK0trL+gOOH/QmAOUkLaipSvUYcvUNcDIDRfiSBMrDJtfT5nxGfRqmTlpssTcQ5nt5Mm4VhKuQAegDaiEZxB+0ug5AZ0FrERhewJVo6E3N7VOUBEfY99xn+YRQKOMWZvMrvYQ5stNeBnGoR6Nd7/rGeqwSXJag/EWqfxfsRTVijcz8UAK9Ld1hTPdXs3hmPkkT9vXZwXNajUJB7uny29Ts90uYiFAmvG2xl4duMBOt1O2hBKxj8wnM/S1KtxMDJcXdgIzkO9AL+6iX8SGX0hY0YseAs7aCg1IaN+sCsHuvHpDwQTN4QWDfy0Kz7eZB6FFl3CSm6cmo9mlCf1thxARmng28sw0he04sz53GsZRSCj3kBMHkIHJCZG7ksLgjfCGvA2LnhqWvalmHsnYdqcvxy9X+ACtISFyr/ATtz4uR5maD1fyORv1Znd3BNn3t14BXB/KmS2NVYCCP6ULyQDRq3Fobs7ShBlheQcbjJPbeEL/9K9bNatgmhr7dUf593I0pmKj+3d1RfzlgmtiObNSuzwlrCC99GBhaptdmdSQsvwE41fnXE0SvxuggcNF2L0pdq1qo5mq3sVUStCIs7L+FMf+lGVF0/vx4WKaHHa4IESsrvWh+ygYYY3MepA8pr0x7q4rx4=
