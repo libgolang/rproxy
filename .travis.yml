@@ -3,9 +3,6 @@ go:
 - 1.14.2
 os:
   - linux
-  - osx
-  - windows
-
 jobs:
   include:
   - stage: build
